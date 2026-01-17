@@ -4,11 +4,6 @@
 
 This project implements a **machine learning-based system for detecting phishing URLs embedded in QR codes**. The system uses a Random Forest classifier trained on URL features to automatically distinguish between legitimate and phishing URLs with 96.21% accuracy.
 
-**Course:** AI and ML for Cybersecurity  
-**Lecturer:** Paata Gogishvili  
-**Date:** January 2026  
-**Location:** Tbilisi
-
 ---
 
 ## TABLE OF CONTENTS
@@ -21,7 +16,6 @@ This project implements a **machine learning-based system for detecting phishing
 6. [Visualizations](#visualizations)
 7. [Installation & Usage](#installation--usage)
 8. [Conclusion](#6-conclusion)
-9. [References](#references)
 
 ---
 
@@ -446,18 +440,3 @@ This research successfully demonstrated that machine learning effectively detect
 - Complementary security mechanisms (URL reputation, real-time scanning, user warnings)
 
 ---
-
-## References
-
-1. Breiman, L. (2001). "Random Forests." *Machine Learning*, 45(1), 5-32.
-2. Ma, J., et al. (2009). "Learning to Detect Malicious URLs." *ACM Transactions on Intelligent Systems and Technology*, 2(3).
-3. UCI Machine Learning Repository. "Phishing Websites Dataset." https://archive.ics.uci.edu/ml/datasets/phishing+websites
-4. Kaggle. "Phishing URL Dataset." https://www.kaggle.com/datasets/eswarchandt/phishing-url-dataset
-5. Hastie, T., Tibshirani, R., & Friedman, J. (2009). *The Elements of Statistical Learning*. Springer-Verlag.
-6. Verizon. (2023). "*2023 Data Breach Investigations Report*."
-7. Anderson, B., et al. (2011). "PhishZoo: Detecting Phishing Websites by Visual Similarity." *ACM SIGMM*, 1381-1382.
-8. Dhamija, R., Tygar, J. D., & Hearst, M. (2006). "Why Phishing Works." *SIGCHI Conference*, 581-590.
-
----
-
-**Last Updated:** January 18, 2026
