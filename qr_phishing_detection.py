@@ -1,9 +1,4 @@
 """
-QR Code Phishing Detection Using Machine Learning
-Course: AI and ML for Cybersecurity
-Author: Team
-Date: January 2026
-
 This module implements a machine learning solution for detecting phishing URLs
 embedded in QR codes using supervised learning techniques.
 """
