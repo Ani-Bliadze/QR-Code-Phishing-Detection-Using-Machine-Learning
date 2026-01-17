@@ -18,10 +18,9 @@ This project implements a **machine learning-based system for detecting phishing
 3. [AI/ML Method](#3-aiml-method)
 4. [Python Implementation](#4-python-implementation)
 5. [Analysis of Results](#5-analysis-of-results)
-6. [Visualizations](#visualizations)
+6. [Conclusion](#6-conclusion)
 7. [Installation & Usage](#installation--usage)
-8. [Conclusion](#6-conclusion)
-9. [References](#references)
+8. [References](#references)
 
 ---
 
@@ -165,13 +164,6 @@ $$P(\hat{y} = 1 | \mathbf{x}) = \frac{1}{B} \sum_{b=1}^{B} P_b(\hat{y} = 1 | \ma
 QR-Code-Phishing-Detection-Using-Machine-Learning/
 ├── qr_phishing_detection.py          # Main ML implementation
 ├── generate_dataset.py                # Dataset generation
-├── run_visualizations.py              # Master visualization runner
-├── viz_model_performance.py           # Performance metrics visualization
-├── viz_feature_importance.py          # Feature importance chart
-├── viz_confusion_matrix.py            # Confusion matrix visualization
-├── viz_class_distribution.py          # Class distribution chart
-├── viz_feature_distributions.py       # Feature distribution histograms
-├── viz_all_features.py                # Alternative features module
 ├── qr_phishing_urls_dataset.csv      # Dataset (3,800 records)
 ├── requirements.txt                   # Python dependencies
 └── README.md                          # Documentation
@@ -283,98 +275,21 @@ Actual Phishing           16 (FN)     |    554 (TP)
 
 ---
 
-## Visualizations
+## 6. CONCLUSION
 
-The project includes **6 separate visualization modules** that can be run independently or together. All visualizations are saved as high-resolution PNG files (300 dpi) for publication quality.
+This research successfully demonstrated that machine learning effectively detects QR code-based phishing attacks. The Random Forest classifier achieved 96.21% accuracy with particularly strong recall (97.03%), effectively identifying phishing threats.
 
-### Quick Visualization Generation
+### Key Contributions:
+1. Automated, scalable phishing detection system
+2. Identified IP-based URLs as primary phishing indicator
+3. Provided fully commented, deployable Python code
+4. Offered clear insights through feature importance analysis
 
-```bash
-# Generate all visualizations in one command
-python run_visualizations.py
-```
-
-This will generate all 5 visualization PNG files automatically.
-
-### Individual Visualization Modules
-
-#### 1. **viz_model_performance.py**
-Main performance metrics visualization:
-```python
-from viz_model_performance import visualize_model_performance
-visualize_model_performance(y_test, y_pred, y_pred_proba, results)
-```
-**Output:** `01_model_performance_analysis.png`
-- Confusion Matrix Heatmap
-- Classification Metrics Bar Chart
-- ROC Curve with AUC score
-- Prediction Probability Distribution
-
-#### 2. **viz_feature_importance.py**
-Feature importance ranking:
-```python
-from viz_feature_importance import visualize_feature_importance
-visualize_feature_importance(model, feature_names=['url_length', 'num_dots', ...])
-```
-**Output:** `02_feature_importance.png`
-- Horizontal bar chart showing feature rankings
-- Shows percentage contribution of each feature
-- Key: IP-Based URL (32.47%) and HTTPS (21.56%) most important
-
-#### 3. **viz_confusion_matrix.py**
-Detailed confusion matrix with metrics:
-```python
-from viz_confusion_matrix import visualize_confusion_matrix_detailed
-visualize_confusion_matrix_detailed(confusion_matrix)
-```
-**Output:** `03_confusion_matrix_detailed.png`
-- Color-coded confusion matrix
-- TN, FP, FN, TP values and percentages
-- Derived metrics: Accuracy, Precision, Recall, Specificity, FNR, FPR
-
-#### 4. **viz_class_distribution.py**
-Dataset class balance:
-```python
-from viz_class_distribution import visualize_class_distribution
-visualize_class_distribution(data)
-```
-**Output:** `04_class_distribution.png`
-- Pie chart with percentages
-- Bar chart with absolute counts
-- Verifies balanced dataset (52.6% legitimate, 47.4% phishing)
-
-#### 5. **viz_feature_distributions.py**
-Feature distribution comparison:
-```python
-from viz_feature_distributions import visualize_feature_distributions
-visualize_feature_distributions(data, features=['url_length', 'num_dots', ...])
-```
-**Output:** `06_feature_distributions.png`
-- 6-subplot grid (one per feature)
-- Green: Legitimate URLs
-- Red: Phishing URLs
-- Shows discriminative power of each feature
-
-### Using Visualizations in Your Code
-
-```python
-# Option 1: Integrated approach
-from qr_phishing_detection import QRPhishingDetector
-
-detector = QRPhishingDetector('qr_phishing_urls_dataset.csv')
-detector.load_data()
-detector.preprocess_data()
-detector.train_random_forest()
-results = detector.evaluate_model()
-detector.visualize_all_results(results)
-
-# Option 2: Individual modules
-from viz_model_performance import visualize_model_performance
-visualize_model_performance(y_test, y_pred, y_pred_proba, results)
-
-# Option 3: Master runner
-python run_visualizations.py
-```
+### Real-World Integration:
+- Mobile OS integration for QR scanning protection
+- Browser extensions for automatic URL verification
+- Payment app transaction verification
+- Complementary security mechanisms (URL reputation, real-time scanning, user warnings)
 
 ---
 
@@ -398,9 +313,31 @@ python generate_dataset.py
 
 # 4. Run complete pipeline
 python qr_phishing_detection.py
+```
 
-# 5. Generate all visualizations
-python run_visualizations.py
+## Installation & Usage
+
+### Prerequisites
+- Python 3.8+
+- pip package manager
+
+### Quick Start
+
+```bash
+# 1. Clone/download repository
+cd QR-Code-Phishing-Detection-Using-Machine-Learning
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Generate dataset
+python generate_dataset.py
+
+# 4. Run complete pipeline
+python qr_phishing_detection.py
+
+# 5. (Optional) Generate all visualizations with summary report
+python visualizations.py
 ```
 
 ### Example: Predict New URL
@@ -427,23 +364,58 @@ print(f"Prediction: {prediction['prediction']}")
 print(f"Confidence: {prediction['confidence']:.2f}%")
 ```
 
----
+## Visualizations
 
-## 6. CONCLUSION
+The project generates **6 comprehensive visualization files** for model analysis and reporting:
 
-This research successfully demonstrated that machine learning effectively detects QR code-based phishing attacks. The Random Forest classifier achieved 96.21% accuracy with particularly strong recall (97.03%), effectively identifying phishing threats.
+### 1. **01_model_performance_analysis.png**
+Four-subplot analysis showing:
+- **Confusion Matrix Heatmap:** True/False Positives/Negatives breakdown
+- **Performance Metrics Bar Chart:** Accuracy, Precision, Recall, F1-Score comparison
+- **ROC Curve:** Model discrimination ability with AUC score
+- **Prediction Probability Distribution:** Confidence score distribution by class
 
-### Key Contributions:
-1. Automated, scalable phishing detection system
-2. Identified IP-based URLs as primary phishing indicator
-3. Provided fully commented, deployable Python code
-4. Comprehensive visualization suite for model analysis
+### 2. **02_feature_importance.png**
+Horizontal bar chart ranking features by importance:
+- IP-Based URL: 32.47% (most important)
+- HTTPS Usage: 21.56%
+- Suspicious Keywords: 18.34%
+- Has @ Symbol: 15.23%
+- URL Length: 9.87%
+- Number of Dots: 2.53% (least important)
 
-### Real-World Integration:
-- Mobile OS integration for QR scanning protection
-- Browser extensions for automatic URL verification
-- Payment app transaction verification
-- Complementary security mechanisms (URL reputation, real-time scanning, user warnings)
+### 3. **03_confusion_matrix_detailed.png**
+Detailed confusion matrix visualization with:
+- Color-coded cells (green for correct, red for incorrect)
+- TN, FP, FN, TP values with counts
+- Cybersecurity metrics: Accuracy, Precision, Recall, Specificity
+
+### 4. **04_class_distribution.png**
+Two visualizations of dataset balance:
+- **Pie Chart:** Percentage split (52.6% legitimate, 47.4% phishing)
+- **Bar Chart:** Absolute counts with data labels
+
+### 5. **05_feature_correlation.png**
+Heatmap showing correlation coefficients between:
+- All 6 URL features
+- Target variable (label)
+- Color intensity indicates correlation strength
+
+### 6. **06_feature_distributions.png**
+6-subplot grid comparing feature distributions:
+- Green histograms: Legitimate URLs
+- Red histograms: Phishing URLs
+- Shows how each feature differentiates the two classes
+
+### 7. **VISUALIZATION_SUMMARY.txt**
+Text report containing:
+- All performance metrics
+- Confusion matrix breakdown with FNR/FPR
+- Feature importance rankings
+- Dataset statistics
+- Visualization descriptions
+- Cybersecurity insights
+- Deployment recommendations
 
 ---
 

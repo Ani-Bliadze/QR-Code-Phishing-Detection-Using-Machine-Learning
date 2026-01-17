@@ -319,22 +319,28 @@ class QRPhishingDetector:
     
     def visualize_results(self, results):
         """
-        Create visualizations for model performance analysis.
+        Create comprehensive visualizations for model performance analysis.
         
         Args:
             results (dict): Dictionary containing evaluation metrics and predictions
         """
-        fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-        fig.suptitle('QR Code Phishing Detection - Model Performance', fontsize=16, fontweight='bold')
+        fig, axes = plt.subplots(2, 2, figsize=(16, 12))
+        fig.suptitle('QR Code Phishing Detection - Model Performance Analysis', fontsize=16, fontweight='bold')
         
         # 1. Confusion Matrix Heatmap
         cm = results['confusion_matrix']
         sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=axes[0, 0],
                    xticklabels=['Legitimate', 'Phishing'],
-                   yticklabels=['Legitimate', 'Phishing'])
-        axes[0, 0].set_title('Confusion Matrix')
-        axes[0, 0].set_ylabel('Actual')
-        axes[0, 0].set_xlabel('Predicted')
+                   yticklabels=['Legitimate', 'Phishing'],
+                   cbar_kws={'label': 'Count'})
+        axes[0, 0].set_title('Confusion Matrix', fontweight='bold', fontsize=12)
+        axes[0, 0].set_ylabel('Actual Label', fontweight='bold')
+        axes[0, 0].set_xlabel('Predicted Label', fontweight='bold')
+        
+        # Add confusion matrix values annotation
+        tn, fp, fn, tp = cm.ravel()
+        axes[0, 0].text(0.5, -0.15, f'TN={tn} | FP={fp}\nFN={fn} | TP={tp}', 
+                       transform=axes[0, 0].transAxes, ha='center', fontsize=10)
         
         # 2. Performance Metrics Bar Chart
         metrics = {
@@ -343,41 +349,249 @@ class QRPhishingDetector:
             'Recall': results['recall'],
             'F1-Score': results['f1']
         }
-        axes[0, 1].bar(metrics.keys(), metrics.values(), color=['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728'])
-        axes[0, 1].set_title('Performance Metrics')
-        axes[0, 1].set_ylabel('Score')
-        axes[0, 1].set_ylim([0, 1])
-        for i, v in enumerate(metrics.values()):
-            axes[0, 1].text(i, v + 0.02, f'{v:.2f}', ha='center', fontweight='bold')
+        colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+        bars = axes[0, 1].bar(metrics.keys(), metrics.values(), color=colors, edgecolor='black', linewidth=1.5)
+        axes[0, 1].set_title('Classification Metrics', fontweight='bold', fontsize=12)
+        axes[0, 1].set_ylabel('Score', fontweight='bold')
+        axes[0, 1].set_ylim([0.8, 1.0])
+        axes[0, 1].grid(axis='y', alpha=0.3, linestyle='--')
+        
+        # Add value labels on bars
+        for bar, (name, value) in zip(bars, metrics.items()):
+            height = bar.get_height()
+            axes[0, 1].text(bar.get_x() + bar.get_width()/2., height + 0.005,
+                           f'{value:.4f}', ha='center', va='bottom', fontweight='bold', fontsize=9)
         
         # 3. ROC Curve
-        fpr, tpr, _ = roc_curve(self.y_test, results['y_pred_proba'])
-        axes[1, 0].plot(fpr, tpr, color='darkorange', lw=2, 
-                       label=f'ROC curve (AUC = {results["roc_auc"]:.2f})')
-        axes[1, 0].plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label='Random Classifier')
-        axes[1, 0].set_xlim([0.0, 1.0])
-        axes[1, 0].set_ylim([0.0, 1.05])
-        axes[1, 0].set_xlabel('False Positive Rate')
-        axes[1, 0].set_ylabel('True Positive Rate')
-        axes[1, 0].set_title('ROC Curve')
-        axes[1, 0].legend(loc="lower right")
-        axes[1, 0].grid(True, alpha=0.3)
+        fpr, tpr, thresholds = roc_curve(self.y_test, results['y_pred_proba'])
+        axes[1, 0].plot(fpr, tpr, color='darkorange', lw=3, 
+                       label=f'ROC curve (AUC = {results["roc_auc"]:.4f})')
+        axes[1, 0].plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--', label='Random Classifier (AUC = 0.50)')
+        axes[1, 0].fill_between(fpr, tpr, alpha=0.2, color='darkorange')
+        axes[1, 0].set_xlim([-0.02, 1.02])
+        axes[1, 0].set_ylim([-0.02, 1.02])
+        axes[1, 0].set_xlabel('False Positive Rate', fontweight='bold')
+        axes[1, 0].set_ylabel('True Positive Rate', fontweight='bold')
+        axes[1, 0].set_title('ROC Curve', fontweight='bold', fontsize=12)
+        axes[1, 0].legend(loc="lower right", fontsize=10)
+        axes[1, 0].grid(True, alpha=0.3, linestyle='--')
         
-        # 4. Prediction Distribution
-        axes[1, 1].hist(results['y_pred_proba'][self.y_test == 0], bins=30, 
-                       alpha=0.6, label='Legitimate (actual)', color='blue')
-        axes[1, 1].hist(results['y_pred_proba'][self.y_test == 1], bins=30, 
-                       alpha=0.6, label='Phishing (actual)', color='red')
-        axes[1, 1].set_xlabel('Predicted Probability of Being Phishing')
-        axes[1, 1].set_ylabel('Frequency')
-        axes[1, 1].set_title('Prediction Probability Distribution')
-        axes[1, 1].legend()
-        axes[1, 1].grid(True, alpha=0.3)
+        # 4. Prediction Probability Distribution
+        legitimate_probs = results['y_pred_proba'][self.y_test == 0]
+        phishing_probs = results['y_pred_proba'][self.y_test == 1]
+        
+        axes[1, 1].hist(legitimate_probs, bins=30, alpha=0.7, label='Legitimate (actual)', 
+                       color='green', edgecolor='black', linewidth=0.5)
+        axes[1, 1].hist(phishing_probs, bins=30, alpha=0.7, label='Phishing (actual)', 
+                       color='red', edgecolor='black', linewidth=0.5)
+        axes[1, 1].axvline(x=0.5, color='black', linestyle='--', linewidth=2, label='Decision Threshold (0.5)')
+        axes[1, 1].set_xlabel('Predicted Probability of Phishing', fontweight='bold')
+        axes[1, 1].set_ylabel('Frequency', fontweight='bold')
+        axes[1, 1].set_title('Prediction Probability Distribution', fontweight='bold', fontsize=12)
+        axes[1, 1].legend(fontsize=9)
+        axes[1, 1].grid(True, alpha=0.3, axis='y', linestyle='--')
         
         plt.tight_layout()
-        plt.savefig('qr_phishing_detection_results.png', dpi=300, bbox_inches='tight')
-        print("\n✓ Visualization saved as 'qr_phishing_detection_results.png'")
+        plt.savefig('01_model_performance_analysis.png', dpi=300, bbox_inches='tight')
+        print("\n✓ Visualization saved as '01_model_performance_analysis.png'")
         plt.show()
+    
+    def visualize_feature_importance(self):
+        """
+        Visualize feature importance from the trained Random Forest model.
+        """
+        if self.model is None:
+            print("✗ Model not trained. Call train_random_forest() first.")
+            return
+        
+        feature_names = ['url_length', 'num_dots', 'has_at', 'https', 
+                        'suspicious_keywords', 'ip_based']
+        importances = self.model.feature_importances_
+        
+        # Sort by importance
+        indices = np.argsort(importances)[::-1]
+        sorted_features = [feature_names[i] for i in indices]
+        sorted_importances = [importances[i] for i in indices]
+        
+        fig, ax = plt.subplots(figsize=(10, 6))
+        colors = plt.cm.viridis(np.linspace(0.3, 0.9, len(sorted_features)))
+        bars = ax.barh(sorted_features, sorted_importances, color=colors, edgecolor='black', linewidth=1.5)
+        
+        ax.set_xlabel('Importance Score', fontweight='bold', fontsize=11)
+        ax.set_ylabel('Features', fontweight='bold', fontsize=11)
+        ax.set_title('Random Forest - Feature Importance Analysis', fontweight='bold', fontsize=13)
+        ax.grid(axis='x', alpha=0.3, linestyle='--')
+        
+        # Add value labels
+        for bar, importance in zip(bars, sorted_importances):
+            width = bar.get_width()
+            ax.text(width + 0.01, bar.get_y() + bar.get_height()/2., 
+                   f'{importance:.4f}', ha='left', va='center', fontweight='bold', fontsize=10)
+        
+        plt.tight_layout()
+        plt.savefig('02_feature_importance.png', dpi=300, bbox_inches='tight')
+        print("✓ Feature importance visualization saved as '02_feature_importance.png'")
+        plt.show()
+    
+    def visualize_confusion_matrix_detailed(self, results):
+        """
+        Create a detailed confusion matrix visualization with metrics.
+        """
+        cm = results['confusion_matrix']
+        tn, fp, fn, tp = cm.ravel()
+        
+        fig, ax = plt.subplots(figsize=(10, 8))
+        
+        # Create detailed confusion matrix
+        sns.heatmap(cm, annot=False, cmap='RdYlGn', ax=ax, cbar=False,
+                   xticklabels=['Legitimate', 'Phishing'],
+                   yticklabels=['Legitimate', 'Phishing'])
+        
+        # Add custom annotations with metrics
+        ax.text(0.5, 0.25, f'TN\n{tn}', ha='center', va='center', fontsize=16, fontweight='bold', color='darkgreen')
+        ax.text(1.5, 0.25, f'FP\n{fp}', ha='center', va='center', fontsize=16, fontweight='bold', color='darkred')
+        ax.text(0.5, 1.25, f'FN\n{fn}', ha='center', va='center', fontsize=16, fontweight='bold', color='darkred')
+        ax.text(1.5, 1.25, f'TP\n{tp}', ha='center', va='center', fontsize=16, fontweight='bold', color='darkgreen')
+        
+        ax.set_ylabel('Actual', fontweight='bold', fontsize=12)
+        ax.set_xlabel('Predicted', fontweight='bold', fontsize=12)
+        ax.set_title('Detailed Confusion Matrix\n(TN=True Negative, FP=False Positive, FN=False Negative, TP=True Positive)',
+                    fontweight='bold', fontsize=13)
+        
+        # Add metrics summary
+        accuracy = (tp + tn) / (tp + tn + fp + fn)
+        precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+        
+        metrics_text = f'Accuracy: {accuracy:.4f}\nPrecision: {precision:.4f}\nRecall: {recall:.4f}\nSpecificity: {specificity:.4f}'
+        fig.text(0.99, 0.01, metrics_text, ha='right', va='bottom', fontsize=10, 
+                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5), family='monospace')
+        
+        plt.tight_layout()
+        plt.savefig('03_confusion_matrix_detailed.png', dpi=300, bbox_inches='tight')
+        print("✓ Detailed confusion matrix saved as '03_confusion_matrix_detailed.png'")
+        plt.show()
+    
+    def visualize_class_distribution(self):
+        """
+        Visualize class distribution in the dataset.
+        """
+        if self.data is None:
+            print("✗ Data not loaded. Call load_data() first.")
+            return
+        
+        fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+        
+        # Overall class distribution
+        class_counts = self.data['label'].value_counts()
+        colors_pie = ['#2ecc71', '#e74c3c']
+        wedges, texts, autotexts = axes[0].pie(class_counts.values, 
+                                               labels=['Legitimate', 'Phishing'],
+                                               autopct='%1.1f%%',
+                                               colors=colors_pie,
+                                               startangle=90,
+                                               explode=(0.05, 0.05),
+                                               textprops={'fontsize': 11, 'fontweight': 'bold'})
+        axes[0].set_title('Overall Class Distribution', fontweight='bold', fontsize=13)
+        
+        # Bar chart of class distribution
+        axes[1].bar(['Legitimate', 'Phishing'], class_counts.values, 
+                   color=colors_pie, edgecolor='black', linewidth=2, width=0.6)
+        axes[1].set_ylabel('Count', fontweight='bold', fontsize=11)
+        axes[1].set_title('Class Distribution - Bar Chart', fontweight='bold', fontsize=13)
+        axes[1].grid(axis='y', alpha=0.3, linestyle='--')
+        
+        # Add value labels
+        for i, v in enumerate(class_counts.values):
+            axes[1].text(i, v + 20, str(v), ha='center', fontweight='bold', fontsize=11)
+        
+        plt.tight_layout()
+        plt.savefig('04_class_distribution.png', dpi=300, bbox_inches='tight')
+        print("✓ Class distribution visualization saved as '04_class_distribution.png'")
+        plt.show()
+    
+    def visualize_feature_correlation(self):
+        """
+        Visualize correlation between features and target variable.
+        """
+        if self.data is None:
+            print("✗ Data not loaded. Call load_data() first.")
+            return
+        
+        feature_columns = ['url_length', 'num_dots', 'has_at', 'https', 
+                          'suspicious_keywords', 'ip_based', 'label']
+        correlation_matrix = self.data[feature_columns].corr()
+        
+        fig, ax = plt.subplots(figsize=(10, 8))
+        sns.heatmap(correlation_matrix, annot=True, fmt='.3f', cmap='coolwarm', 
+                   center=0, square=True, ax=ax, cbar_kws={'label': 'Correlation Coefficient'},
+                   linewidths=1, linecolor='gray')
+        
+        ax.set_title('Feature Correlation Heatmap', fontweight='bold', fontsize=13)
+        plt.tight_layout()
+        plt.savefig('05_feature_correlation.png', dpi=300, bbox_inches='tight')
+        print("✓ Feature correlation visualization saved as '05_feature_correlation.png'")
+        plt.show()
+    
+    def visualize_feature_distributions(self):
+        """
+        Visualize distribution of each feature for legitimate vs phishing URLs.
+        """
+        if self.data is None:
+            print("✗ Data not loaded. Call load_data() first.")
+            return
+        
+        features = ['url_length', 'num_dots', 'has_at', 'https', 'suspicious_keywords', 'ip_based']
+        fig, axes = plt.subplots(2, 3, figsize=(16, 10))
+        axes = axes.ravel()
+        
+        for idx, feature in enumerate(features):
+            legitimate_data = self.data[self.data['label'] == 0][feature]
+            phishing_data = self.data[self.data['label'] == 1][feature]
+            
+            axes[idx].hist(legitimate_data, bins=20, alpha=0.6, label='Legitimate', color='green', edgecolor='black')
+            axes[idx].hist(phishing_data, bins=20, alpha=0.6, label='Phishing', color='red', edgecolor='black')
+            axes[idx].set_xlabel(feature, fontweight='bold')
+            axes[idx].set_ylabel('Frequency', fontweight='bold')
+            axes[idx].set_title(f'{feature} Distribution', fontweight='bold')
+            axes[idx].legend()
+            axes[idx].grid(axis='y', alpha=0.3, linestyle='--')
+        
+        fig.suptitle('Feature Distributions - Legitimate vs Phishing URLs', fontweight='bold', fontsize=14)
+        plt.tight_layout()
+        plt.savefig('06_feature_distributions.png', dpi=300, bbox_inches='tight')
+        print("✓ Feature distributions visualization saved as '06_feature_distributions.png'")
+        plt.show()
+    
+    def visualize_all_results(self, results):
+        """
+        Generate all available visualizations.
+        
+        Args:
+            results (dict): Dictionary containing evaluation metrics and predictions
+        """
+        print("\n" + "="*60)
+        print("GENERATING COMPREHENSIVE VISUALIZATIONS")
+        print("="*60)
+        
+        self.visualize_results(results)
+        self.visualize_feature_importance()
+        self.visualize_confusion_matrix_detailed(results)
+        self.visualize_class_distribution()
+        self.visualize_feature_correlation()
+        self.visualize_feature_distributions()
+        
+        print("\n" + "="*60)
+        print("ALL VISUALIZATIONS GENERATED SUCCESSFULLY!")
+        print("="*60)
+        print("\nGenerated files:")
+        print("  1. 01_model_performance_analysis.png - Main performance metrics")
+        print("  2. 02_feature_importance.png - Feature importance ranking")
+        print("  3. 03_confusion_matrix_detailed.png - Detailed confusion matrix")
+        print("  4. 04_class_distribution.png - Class distribution analysis")
+        print("  5. 05_feature_correlation.png - Feature correlation heatmap")
+        print("  6. 06_feature_distributions.png - Feature distributions by class")
     
     def predict_url(self, url_features):
         """
@@ -446,8 +660,8 @@ def main():
     # 6. Evaluate model
     results = detector.evaluate_model()
     
-    # 7. Visualize results
-    detector.visualize_results(results)
+    # 7. Generate comprehensive visualizations
+    detector.visualize_all_results(results)
     
     # 8. Example prediction
     print("\n" + "="*60)
